@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vibe Academy — O'quv markaz boshqaruvi</title>
+<style>
+  :root{
+    --bg: #ffffff;
+    --text: #0d0d0d;
+    --accent: #2e3a87;
+    --accent-soft: #e7e9fb;
+    --line: #dcdce6;
+    --card: #f7f7fb;
+    --danger: #b3352c;
+    --ok: #256a3e;
+    --ok-soft: #e3f3e7;
+    --danger-soft: #fbe6e4;
+    --radius: 10px;
+    --font-display: 'Segoe UI', Roboto, -apple-system, sans-serif;
+    --nav-w: 240px;
+  }
+  [data-theme="dark"]{
+    --bg: #0a0a0a;
+    --text: #ffffff;
+    --accent: #8f9dff;
+    --accent-soft: #1c1f3d;
+    --line: #2a2a33;
+    --card: #131317;
+    --danger: #ff6b5e;
+    --ok: #6fd196;
+    --ok-soft: #10281a;
+    --danger-soft: #2b1412;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family: var(--font-display);
+    background: var(--bg);
+    color: var(--text);
+    transition: background .25s ease, color .25s ease;
+    min-height:100vh;
+  }
+
+  @keyframes popIn{
+    from{ opacity:0; transform: scale(.94) translateY(6px); }
+    to{ opacity:1; transform: scale(1) translateY(0); }
+  }
+  @keyframes shake{
+    10%,90%{ transform:translateX(-1px); }
+    20%,80%{ transform:translateX(2px); }
+    30%,50%,70%{ transform:translateX(-4px); }
+    40%,60%{ transform:translateX(4px); }
+  }
+  .shake{ animation: shake .4s ease; }
+
+  /* ---------- LOGIN ---------- */
+  #loginScreen{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+  }
+  .login-box{
+    width:100%;
+    max-width:360px;
+    border:1px solid var(--line);
+    border-radius: var(--radius);
+    padding:36px 28px;
+    background: var(--card);
+    animation: popIn .35s cubic-bezier(.2,.9,.3,1.2);
+  }
+  .login-box h1{ font-size:22px; margin:0 0 4px; letter-spacing:-0.02em; }
+  .login-box p{ margin:0 0 24px; color: var(--text); opacity:.6; font-size:14px; }
+  .field{ margin-bottom:14px; }
+  .field label{
+    display:block; font-size:12px; text-transform:uppercase;
+    letter-spacing:.06em; opacity:.6; margin-bottom:6px;
+  }
+  .field input, .field select{
+    width:100%; padding:11px 12px; border-radius:8px;
+    border:1px solid var(--line); background: var(--bg); color: var(--text);
+    font-size:14px; outline:none; transition: border-color .15s, box-shadow .15s;
+  }
+  .field input:focus, .field select:focus{ border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:6px;
+    border:none; border-radius:8px; padding:11px 18px; font-size:14px; font-weight:600;
+    cursor:pointer; background: var(--accent); color:#fff; width:100%;
+    transition: transform .15s, box-shadow .15s, opacity .15s;
+  }
+  .btn:hover{ transform: translateY(-2px); box-shadow: 0 6px 16px -6px var(--accent); }
+  .btn:active{ transform: translateY(0) scale(.97); }
+  .btn.secondary{ background:transparent; color: var(--text); border:1px solid var(--line); width:auto; }
+  .btn.secondary:hover{ background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+  .btn.small{ padding:6px 12px; font-size:12px; width:auto; }
+  .login-error{ color: var(--danger); font-size:13px; margin-top:10px; min-height:16px; }
+
+  /* ---------- APP SHELL ---------- */
+  #app { display:none; min-height:100vh; flex-direction: row; }
+  .main-area{ flex:1; min-width:0; display:flex; flex-direction:column; }
+  
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 24px; border-bottom:1px solid var(--line); background: var(--bg);
+  }
+  .topbar-left { display: flex; align-items: center; gap: 12px; }
+  
+  .burger-btn {
+    display: none; background: transparent; border: 1px solid var(--line);
+    border-radius: 6px; padding: 8px 10px; cursor: pointer; color: var(--text);
+    font-size: 18px; flex-direction: column; gap: 4px; justify-content: center;
+  }
+  .burger-btn span { display: block; width: 18px; height: 2px; background: var(--text); transition: .2s; }
+
+  .brand{ display:flex; align-items:center; gap:10px; font-weight:700; font-size:17px; letter-spacing:-0.01em; }
+  .brand .dot{ width:10px; height:10px; border-radius:50%; background: var(--accent); }
+  .top-actions{ display:flex; gap:10px; align-items:center; }
+  
+  .theme-toggle{
+    border:1px solid var(--line); background:var(--card); color:var(--text);
+    border-radius:20px; padding:6px 14px; font-size:13px; cursor:pointer;
+  }
+
+  .content{ padding:24px; max-width:1100px; margin:0 auto; width:100%; }
+  .panel{ display:none; }
+  .panel.active{ display:block; animation: fadeIn .18s ease; }
+  @keyframes fadeIn{ from{ opacity:0; transform:translateY(4px);} to{ opacity:1; transform:translateY(0);} }
+
+  h2.panel-title{ font-size:19px; margin:0 0 16px; }
+
+  .toolbar{ display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:16px; flex-wrap:wrap; }
+  .toolbar > * { flex: 1; min-width: 150px; }
+  .toolbar button { flex: none; }
+  .toolbar input[type="text"], .toolbar select, .toolbar input[type="date"]{
+    padding:9px 12px; border-radius:8px; border:1px solid var(--line);
+    background: var(--card); color: var(--text); font-size:13px; outline:none;
+  }
+  
+  .stats{ display:grid; grid-template-columns:repeat(auto-fit, minmax(140px,1fr)); gap:12px; margin-bottom:20px; }
+  .stat-card{ border:1px solid var(--line); border-radius: var(--radius); padding:14px 16px; background: var(--card); }
+  .stat-card .num{ font-size:24px; font-weight:700; }
+  .stat-card .lbl{ font-size:12px; opacity:.6; margin-top:2px;}
+
+  /* ---------- GROUPS GRID ---------- */
+  .group-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; margin-top: 16px; }
+  .group-card { border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; background: var(--card); display: flex; flex-direction: column; gap: 10px; }
+  .group-card .g-name { font-weight: 700; font-size: 16px; }
+  .group-card .g-count { font-size: 13px; opacity: 0.6; }
+  .group-card .g-actions { margin-top: auto; display: flex; justify-content: flex-end; }
+
+  table{ width:100%; border-collapse:collapse; font-size:13.5px; }
+  thead th{ text-align:left; padding:10px 12px; font-size:11px; text-transform:uppercase; opacity:.55; border-bottom:1px solid var(--line); }
+  tbody td{ padding:12px; border-bottom:1px solid var(--line); vertical-align:middle; }
+  tbody tr:hover{ background: var(--accent-soft); }
+
+  .badge{ display:inline-flex; align-items:center; gap:5px; padding:4px 10px; border-radius:20px; font-size:12px; font-weight:600; cursor:pointer; user-select:none; }
+  .badge.paid{ background: var(--ok-soft); color: var(--ok); }
+  .badge.unpaid{ background: var(--danger-soft); color: var(--danger); }
+  .badge.present{ background: var(--ok-soft); color: var(--ok); }
+  .badge.absent{ background: var(--danger-soft); color: var(--danger); }
+
+  .icon-btn{ background:transparent; border:1px solid var(--line); color: var(--text); border-radius:6px; padding:5px 9px; cursor:pointer; font-size:12px; }
+  .icon-btn.danger{ border-color: var(--danger); color: var(--danger); }
+
+  .modal-overlay{ display:none; position:fixed; inset:0; background: rgba(0,0,0,.5); align-items:center; justify-content:center; z-index:110; padding:20px; }
+  .modal-overlay.active{ display:flex; }
+  .modal{ width:100%; max-width:420px; background: var(--bg); border:1px solid var(--line); border-radius: var(--radius); padding:24px; }
+  .modal-footer{ display:flex; gap:10px; margin-top:18px; }
+  .modal-footer .btn{ width:auto; flex:1; }
+
+  .empty{ text-align:center; padding:50px 20px; opacity:.5; font-size:14px; }
+
+  /* ---------- SIDEBAR NAV ---------- */
+  .sidebar-nav{
+    width: var(--nav-w); flex-shrink:0; display:flex; flex-direction:column; background: var(--card); border-right:1px solid var(--line); padding:20px 0; transition: transform .3s ease;
+  }
+  .sidebar-brand{ display:flex; align-items:center; gap:10px; font-weight:700; font-size:16px; padding:0 20px 20px; margin-bottom:8px; border-bottom:1px solid var(--line); }
+  .sidebar-brand .dot{ width:9px; height:9px; border-radius:50%; background: var(--accent); }
+  .nav-item{ display:flex; align-items:center; gap:12px; padding:14px 20px; cursor:pointer; font-size:14px; color: var(--text); border-bottom:1px solid var(--line); }
+  .nav-item:hover{ background: var(--accent-soft); }
+  .nav-item .nav-num{ display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px; border-radius:50%; font-size:12px; font-weight:700; border:1.5px solid var(--line); background: var(--bg); }
+  .nav-item.active{ background: var(--accent); color:#fff; }
+  .nav-item.active .nav-num{ background:#fff; color: var(--accent); border-color:#fff; }
+
+  .nav-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 99; }
+
+  @media (max-width: 850px) {
+    .burger-btn { display: flex; }
+    .sidebar-nav {
+      position: fixed; top: 0; left: 0; bottom: 0; z-index: 100;
+      transform: translateX(-100%);
+      box-shadow: 4px 0 15px rgba(0,0,0,0.1); background: var(--bg);
+    }
+    .sidebar-nav.open { transform: translateX(0); }
+    .nav-overlay.open { display: block; }
+  }
+
+  @media (max-width: 640px) {
+    .toolbar { flex-direction: column; align-items: stretch; gap: 10px; }
+    .toolbar > * { width: 100%; }
+    table, thead, tbody, tr, td, th { display: block; }
+    thead { display: none; }
+    tbody tr { border: 1px solid var(--line); border-radius: var(--radius); margin-bottom: 12px; padding: 8px; background: var(--card); }
+    tbody td { border: none; display: flex; justify-content: space-between; align-items: center; padding: 8px 6px; text-align: right; }
+    tbody td::before { content: attr(data-label); font-size: 11px; opacity: .6; text-transform: uppercase; font-weight: 600; float: left; pointer-events: none; }
+    
+    /* TO'G'IRLANGAN QISM: Mobil ekranda badge va tugmalar ustiga bosilishi uchun z-index */
+    tbody td .badge, tbody td .icon-btn { position: relative; z-index: 5; pointer-events: auto; }
+  }
+</style>
+</head>
+<body data-theme="light">
+
+  <div id="loginScreen">
+    <div class="login-box">
+      <h1>Vibe Academy</h1>
+      <p>O'quv markaz boshqaruv tizimiga kirish</p>
+      <div class="field">
+        <label>Login</label>
+        <input type="text" id="loginUser" placeholder="admin" autocomplete="username">
+      </div>
+      <div class="field">
+        <label>Parol</label>
+        <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <button class="btn" onclick="tryLogin()">Kirish</button>
+      <div class="login-error" id="loginError"></div>
+    </div>
+  </div>
+
+  <div class="nav-overlay" id="navOverlay" onclick="toggleMenu()"></div>
+
+  <div id="app">
+    <div class="sidebar-nav" id="sidebarNav">
+      <div class="sidebar-brand"><span class="dot"></span> Vibe Academy</div>
+      <div class="nav-item active" data-panel="studentsPanel" onclick="switchTab('studentsPanel', this)">
+        <span class="nav-num">1</span><span class="nav-label">O'quvchilar</span>
+      </div>
+      <div class="nav-item" data-panel="groupsPanel" onclick="switchTab('groupsPanel', this)">
+        <span class="nav-num">2</span><span class="nav-label">Guruhlar</span>
+      </div>
+      <div class="nav-item" data-panel="paymentsPanel" onclick="switchTab('paymentsPanel', this)">
+        <span class="nav-num">3</span><span class="nav-label">To'lovlar</span>
+      </div>
+      <div class="nav-item" data-panel="attendancePanel" onclick="switchTab('attendancePanel', this)">
+        <span class="nav-num">4</span><span class="nav-label">Davomat</span>
+      </div>
+      <div class="nav-item" data-panel="settingsPanel" onclick="switchTab('settingsPanel', this)">
+        <span class="nav-num">5</span><span class="nav-label">Sozlamalar</span>
+      </div>
+      <div class="nav-item" data-panel="reportPanel" onclick="switchTab('reportPanel', this)">
+        <span class="nav-num">6</span><span class="nav-label">Hisobot</span>
+      </div>
+    </div>
+
+    <div class="main-area">
+      <div class="topbar">
+        <div class="topbar-left">
+          <button class="burger-btn" onclick="toggleMenu()">
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+          <div class="brand"><span class="dot"></span> Vibe Academy</div>
+        </div>
+        <div class="top-actions">
+          <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">☀ Oq fon</button>
+          <button class="btn secondary small" onclick="logout()">Chiqish</button>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="panel active" id="studentsPanel">
+          <h2 class="panel-title">O'quvchilar</h2>
+          <div class="stats" id="studentStats"></div>
+          <div class="toolbar">
+            <input type="text" id="searchStudent" placeholder="Qidirish..." oninput="renderStudents()">
+            <button class="btn" onclick="openAddModal()">+ O'quvchi qo'shish</button>
+          </div>
+          <table>
+            <thead><tr><th>F.I.O.</th><th>Guruh</th><th>Telefon</th><th>To'lov</th><th></th></tr></thead>
+            <tbody id="studentsTableBody"></tbody>
+          </table>
+          <div class="empty" id="studentsEmpty" style="display:none;">Hozircha o'quvchilar yo'q.</div>
+        </div>
+
+        <div class="panel" id="groupsPanel">
+          <h2 class="panel-title">Guruhlar</h2>
+          <div class="toolbar">
+            <input type="text" id="newGroupName" placeholder="Yangi guruh nomi...">
+            <button class="btn" onclick="addGroup()">+ Guruh qo'shish</button>
+          </div>
+          <div class="group-grid" id="groupsGrid"></div>
+          <div class="empty" id="groupsEmpty" style="display:none;">Hozircha guruhlar yo'q.</div>
+        </div>
+
+        <div class="panel" id="paymentsPanel">
+          <h2 class="panel-title">To'lovlar</h2>
+          <div class="stats" id="paymentStats"></div>
+          <div class="toolbar">
+            <input type="text" id="searchPayment" placeholder="Qidirish..." oninput="renderPayments()">
+          </div>
+          <table>
+            <thead><tr><th>F.I.O.</th><th>Guruh</th><th>Holati</th></tr></thead>
+            <tbody id="paymentsTableBody"></tbody>
+          </table>
+        </div>
+
+        <div class="panel" id="attendancePanel">
+          <h2 class="panel-title">Davomat</h2>
+          <div class="toolbar">
+            <input type="date" id="attendanceDate" onchange="renderAttendance()">
+            <input type="text" id="searchAttendance" placeholder="Qidirish..." oninput="renderAttendance()">
+          </div>
+          <table>
+            <thead><tr><th>F.I.O.</th><th>Guruh</th><th>Holati</th></tr></thead>
+            <tbody id="attendanceTableBody"></tbody>
+          </table>
+        </div>
+
+        <div class="panel" id="settingsPanel">
+          <h2 class="panel-title">Sozlamalar</h2>
+          <div class="settings-card">
+            <h3>Login va parolni o'zgartirish</h3>
+            <div class="field">
+              <label>Joriy parol</label>
+              <input type="password" id="curPass" placeholder="Joriy parolni kiriting">
+            </div>
+            <div class="field">
+              <label>Yangi login</label>
+              <input type="text" id="newUser" placeholder="Yangi login">
+            </div>
+            <div class="field">
+              <label>Yangi parol</label>
+              <input type="password" id="newPass" placeholder="Yangi parol">
+            </div>
+            <div class="field">
+              <label>Yangi parolni tasdiqlang</label>
+              <input type="password" id="newPass2" placeholder="Yangi parolni qayta kiriting">
+            </div>
+            <button class="btn" onclick="changeCredentials()">Saqlash</button>
+            <div class="save-msg" id="credMsg"></div>
+          </div>
+        </div>
+
+        <div class="panel" id="reportPanel">
+          <h2 class="panel-title">Hisobot</h2>
+          <table>
+            <thead><tr><th>F.I.O.</th><th>Guruh</th><th>To'lov</th></tr></thead>
+            <tbody id="reportTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="addModal">
+    <div class="modal">
+      <h2>Yangi o'quvchi qo'shish</h2>
+      <div class="field">
+        <label>F.I.O.</label>
+        <input type="text" id="newName" placeholder="Aliyev Vali">
+      </div>
+      <div class="field">
+        <label>Guruh</label>
+        <select id="newGroupSelect"></select>
+      </div>
+      <div class="field">
+        <label>Telefon</label>
+        <input type="text" id="newPhone" placeholder="+998 90 123 45 67">
+      </div>
+      <div class="modal-footer">
+        <button class="btn secondary" onclick="closeAddModal()">Bekor qilish</button>
+        <button class="btn" onclick="addStudent()">Qo'shish</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="deleteModal">
+    <div class="modal">
+      <h2>O'quvchini o'chirish</h2>
+      <p style="opacity:.7; font-size:14px;">Rostdan ham <b id="deleteName"></b> ni o'chirmoqchimisiz?</p>
+      <div class="modal-footer">
+        <button class="btn secondary" onclick="closeDeleteModal()">Bekor qilish</button>
+        <button class="btn" style="background:var(--danger)" onclick="confirmDelete()">O'chirish</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="deleteGroupModal">
+    <div class="modal">
+      <h2>Guruhni o'chirish</h2>
+      <p style="opacity:.7; font-size:14px;">"<b id="deleteGroupName"></b>" guruhini o'chirmoqchimisiz?</p>
+      <div class="modal-footer">
+        <button class="btn secondary" onclick="closeDeleteGroupModal()">Bekor qilish</button>
+        <button class="btn" style="background:var(--danger)" onclick="confirmDeleteGroup()">O'chirish</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+  let students = JSON.parse(localStorage.getItem('vibe_students') || '[]');
+  let groups = JSON.parse(localStorage.getItem('vibe_groups') || '[]');
+  let creds = JSON.parse(localStorage.getItem('vibe_creds') || 'null') || { user: "admin", pass: "12345678" };
+
+  let pendingDeleteId = null;
+  let pendingDeleteGroupId = null;
+
+  function saveStudents(){ localStorage.setItem('vibe_students', JSON.stringify(students)); }
+  function saveGroups(){ localStorage.setItem('vibe_groups', JSON.stringify(groups)); }
+  function uid(prefix){ return prefix + '_' + Date.now() + '_' + Math.floor(Math.random()*1000); }
+  function todayStr(){ return new Date().toISOString().slice(0,10); }
+
+  function toggleMenu() {
+    document.getElementById('sidebarNav').classList.toggle('open');
+    document.getElementById('navOverlay').classList.toggle('open');
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const loginInputs = [document.getElementById('loginUser'), document.getElementById('loginPass')];
+    loginInputs.forEach(input => {
+      input.addEventListener("keydown", (e) => { if (e.key === "Enter") tryLogin(); });
+    });
+
+    document.getElementById('newGroupName').addEventListener("keydown", (e) => {
+      if (e.key === "Enter") addGroup();
+    });
+
+    const studentInputs = [document.getElementById('newName'), document.getElementById('newGroupSelect'), document.getElementById('newPhone')];
+    studentInputs.forEach(input => {
+      input.addEventListener("keydown", (e) => { if (e.key === "Enter") addStudent(); });
+    });
+  });
+
+  function tryLogin(){
+    const u = document.getElementById('loginUser').value.trim();
+    const p = document.getElementById('loginPass').value;
+    if(u === creds.user && p === creds.pass){
+      sessionStorage.setItem('vibe_auth','1');
+      showApp();
+    } else {
+      document.getElementById('loginError').textContent = "Login yoki parol noto'g'ri";
+      const box = document.querySelector('.login-box');
+      box.classList.remove('shake');
+      void box.offsetWidth;
+      box.classList.add('shake');
+    }
+  }
+
+  function logout(){
+    sessionStorage.removeItem('vibe_auth');
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('loginScreen').style.display = 'flex';
+  }
+
+  function showApp(){
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    document.getElementById('attendanceDate').value = todayStr();
+    renderAll();
+  }
+
+  function toggleTheme(){
+    const body = document.body;
+    const isDark = body.getAttribute('data-theme') === 'dark';
+    body.setAttribute('data-theme', isDark ? 'light' : 'dark');
+    document.getElementById('themeBtn').textContent = isDark ? '☀ Oq fon' : '● Qora fon';
+  }
+
+  function switchTab(panelId, el){
+    document.querySelectorAll('.nav-item').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById(panelId).classList.add('active');
+    
+    document.getElementById('sidebarNav').classList.remove('open');
+    document.getElementById('navOverlay').classList.remove('open');
+    
+    renderAll();
+  }
+
+  function addGroup(){
+    const input = document.getElementById('newGroupName');
+    const name = input.value.trim();
+    if(!name) return;
+    groups.push({ id: uid('g'), name });
+    saveGroups();
+    input.value = '';
+    renderAll();
+  }
+
+  function openDeleteGroupModal(id){
+    pendingDeleteGroupId = id;
+    const g = groups.find(group => group.id === id);
+    if(g) {
+      document.getElementById('deleteGroupName').textContent = g.name;
+    }
+    document.getElementById('deleteGroupModal').classList.add('active');
+  }
+  function closeDeleteGroupModal(){ document.getElementById('deleteGroupModal').classList.remove('active'); }
+  function confirmDeleteGroup(){
+    groups = groups.filter(g=>g.id !== pendingDeleteGroupId);
+    saveGroups();
+    closeDeleteGroupModal();
+    renderAll();
+  }
+
+  function groupNameById(id){
+    const g = groups.find(g=>g.id===id);
+    return g ? g.name : "Guruhsiz";
+  }
+
+  function renderGroups(){
+    const grid = document.getElementById('groupsGrid');
+    grid.innerHTML = groups.map(g => {
+      const count = students.filter(s=>s.groupId === g.id).length;
+      return `
+      <div class="group-card">
+        <div class="g-name">${escapeHtml(g.name)}</div>
+        <div class="g-count">${count} ta o'quvchi</div>
+        <div class="g-actions">
+          <button class="icon-btn danger" onclick="openDeleteGroupModal('${g.id}')">O'chirish</button>
+        </div>
+      </div>`;
+    }).join('');
+    document.getElementById('groupsEmpty').style.display = groups.length ? 'none' : 'block';
+  }
+
+  function openAddModal(){
+    const sel = document.getElementById('newGroupSelect');
+    sel.innerHTML = groups.map(g=>`<option value="${g.id}">${escapeHtml(g.name)}</option>`).join('');
+    document.getElementById('addModal').classList.add('active');
+    setTimeout(() => document.getElementById('newName').focus(), 100);
+  }
+  function closeAddModal(){ document.getElementById('addModal').classList.remove('active'); }
+
+  function addStudent(){
+    const name = document.getElementById('newName').value.trim();
+    const groupId = document.getElementById('newGroupSelect').value || null;
+    const phone = document.getElementById('newPhone').value.trim();
+    if(!name) return;
+    students.push({ id: uid('s'), name, groupId, phone: phone || '—', paid:false, attendance:{} });
+    saveStudents();
+    
+    document.getElementById('newName').value = '';
+    document.getElementById('newPhone').value = '';
+    
+    closeAddModal();
+    renderAll();
+  }
+
+  function openDeleteModal(id){
+    pendingDeleteId = id;
+    const s = students.find(st => st.id === id);
+    if(s) {
+      document.getElementById('deleteName').textContent = s.name;
+    }
+    document.getElementById('deleteModal').classList.add('active');
+  }
+  function closeDeleteModal(){ document.getElementById('deleteModal').classList.remove('active'); }
+  function confirmDelete(){
+    students = students.filter(s=>s.id !== pendingDeleteId);
+    saveStudents();
+    closeDeleteModal();
+    renderAll();
+  }
+
+  function togglePaid(id){
+    const st = students.find(s=>s.id===id);
+    if(st){ st.paid = !st.paid; saveStudents(); renderAll(); }
+  }
+
+  function toggleAttendance(studentId) {
+    const date = document.getElementById('attendanceDate').value || todayStr();
+    const st = students.find(s => s.id === studentId);
+    if (st) {
+      if (!st.attendance) st.attendance = {};
+      st.attendance[date] = !st.attendance[date];
+      saveStudents();
+      renderAttendance();
+    }
+  }
+
+  function changeCredentials(){
+    const curP = document.getElementById('curPass').value;
+    const newU = document.getElementById('newUser').value.trim();
+    const newP = document.getElementById('newPass').value;
+    const newP2 = document.getElementById('newPass2').value;
+    const msg = document.getElementById('credMsg');
+    
+    if(curP !== creds.pass){
+      msg.style.color = 'var(--danger)';
+      msg.textContent = "Joriy parol noto'g'ri!";
+      return;
+    }
+    if(!newU || !newP){
+      msg.style.color = 'var(--danger)';
+      msg.textContent = "Login va yangi parol maydonlarini to'ldiring!";
+      return;
+    }
+    if(newP !== newP2){
+      msg.style.color = 'var(--danger)';
+      msg.textContent = "Yangi parollar bir-biriga mos kelmadi!";
+      return;
+    }
+    
+    creds.user = newU;
+    creds.pass = newP;
+    localStorage.setItem('vibe_creds', JSON.stringify(creds));
+    
+    msg.style.color = 'var(--ok)';
+    msg.textContent = "Ma'lumotlar muvaffaqiyatli o'zgartirildi!";
+    
+    document.getElementById('curPass').value = '';
+    document.getElementById('newUser').value = '';
+    document.getElementById('newPass').value = '';
+    document.getElementById('newPass2').value = '';
+  }
+
+  function renderAll(){
+    renderStudents();
+    renderGroups();
+    renderPayments();
+    renderAttendance();
+    renderReport();
+  }
+
+  function renderStudents(){
+    const q = (document.getElementById('searchStudent')?.value || '').toLowerCase();
+    const tbody = document.getElementById('studentsTableBody');
+    if(!tbody) return;
+    const filtered = students.filter(s => s.name.toLowerCase().includes(q));
+    tbody.innerHTML = filtered.map(s => `
+      <tr>
+        <td data-label="F.I.O."><span class="group-name">${escapeHtml(s.name)}</span></td>
+        <td data-label="Guruh">${escapeHtml(groupNameById(s.groupId))}</td>
+        <td data-label="Telefon">${escapeHtml(s.phone)}</td>
+        <td data-label="To'lov">
+          <span class="badge ${s.paid ? 'paid' : 'unpaid'}" onclick="togglePaid('${s.id}')">
+            ${s.paid ? "✓ To'lagan" : "✕ To'lamagan"}
+          </span>
+        </td>
+        <td data-label="Amal"><button class="icon-btn danger" onclick="openDeleteModal('${s.id}')">O'chirish</button></td>
+      </tr>
+    `).join('');
+    document.getElementById('studentsEmpty').style.display = filtered.length ? 'none' : 'block';
+    
+    document.getElementById('studentStats').innerHTML = `
+      <div class="stat-card"><div class="num">${students.length}</div><div class="lbl">Jami o'quvchilar</div></div>
+      <div class="stat-card"><div class="num">${students.filter(s=>s.paid).length}</div><div class="lbl">To'laganlar</div></div>
+    `;
+  }
+
+  function renderPayments(){
+    const q = (document.getElementById('searchPayment')?.value || '').toLowerCase();
+    const tbody = document.getElementById('paymentsTableBody');
+    if(!tbody) return;
+    const filtered = students.filter(s => s.name.toLowerCase().includes(q));
+    tbody.innerHTML = filtered.map(s => `
+      <tr>
+        <td data-label="F.I.O.">${escapeHtml(s.name)}</td>
+        <td data-label="Guruh">${escapeHtml(groupNameById(s.groupId))}</td>
+        <td data-label="Holati"><span class="badge ${s.paid ? 'paid' : 'unpaid'}" onclick="togglePaid('${s.id}')">${s.paid ? "✓ To'lagan" : "✕ To'lamagan"}</span></td>
+      </tr>
+    `).join('');
+    
+    const paymentStats = document.getElementById('paymentStats');
+    if(paymentStats) {
+      paymentStats.innerHTML = `
+        <div class="stat-card"><div class="num">${students.filter(s=>s.paid).length} ta</div><div class="lbl">To'laganlar</div></div>
+        <div class="stat-card"><div class="num">${students.filter(s=>!s.paid).length} ta</div><div class="lbl">To'lamaganlar</div></div>
+      `;
+    }
+  }
+
+  function renderAttendance(){
+    const date = document.getElementById('attendanceDate').value || todayStr();
+    const q = (document.getElementById('searchAttendance')?.value || '').toLowerCase();
+    const tbody = document.getElementById('attendanceTableBody');
+    if(!tbody) return;
+    
+    const filtered = students.filter(s => s.name.toLowerCase().includes(q));
+    
+    tbody.innerHTML = filtered.map(s => {
+      if (!s.attendance) s.attendance = {};
+      const isPresent = !!s.attendance[date];
+      return `
+      <tr>
+        <td data-label="F.I.O.">${escapeHtml(s.name)}</td>
+        <td data-label="Guruh">${escapeHtml(groupNameById(s.groupId))}</td>
+        <td data-label="Holati">
+          <span class="badge ${isPresent ? 'present' : 'absent'}" onclick="toggleAttendance('${s.id}')">
+            ${isPresent ? "✓ Keldi" : "✕ Kelmadi"}
+          </span>
+        </td>
+      </tr>
+    `}).join('');
+  }
+
+  function renderReport(){
+    const tbody = document.getElementById('reportTableBody');
+    if(!tbody) return;
+    tbody.innerHTML = students.map(s => `
+      <tr>
+        <td data-label="F.I.O.">${escapeHtml(s.name)}</td>
+        <td data-label="Guruh">${escapeHtml(groupNameById(s.groupId))}</td>
+        <td data-label="To'lov">${s.paid ? 'Toʻlangan' : 'Toʻlanmagan'}</td>
+      </tr>
+    `).join('');
+  }
+
+  function escapeHtml(str){
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  if(sessionStorage.getItem('vibe_auth') === '1'){
+    showApp();
+  }
+</script>
+</body>
+</html>
